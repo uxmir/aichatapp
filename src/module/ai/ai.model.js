@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
-
-const ai = new mongoose.Schema({
-  userText: {
-    type: String,
-    enum: ["text", "file", "video", "image"],
-    default: "text",
-  },
-
-  aiReply: {
-    type: String,
-    enum: ["text", "file", "video", "image"],
-    default: "text",
-  },
-});
-export default mongoose.model("ai", ai);
+const aiSchema = new mongoose.Schema({
+userInput:{
+  type:String,
+  required:true
+},
+aiData:{
+  type:String,
+  required:true
+},
+imageUrl:{
+  type:String,
+  default:""
+},
+},{timestamps:true});
+export default mongoose.model("AI", aiSchema);
