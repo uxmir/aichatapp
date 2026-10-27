@@ -11,8 +11,13 @@ const aiResponseFind = async (req, res) => {
   const fetchedData = await aiService.aiResponseFind();
   ApiResponse.ok(res, "data fetched successfully", fetchedData);
 };
+
+const aiResponseSessionTitleUpdate=async(req,res)=>{
+  const result=await aiService.aiResponseSessionTitleUpdate(req.params.id,req.body)
+  ApiResponse.ok(res, "data fetched successfully", result);
+}
 const aiResponseDelete = async (req, res) => {
-  const deletedData = await aiService.aiResponseDelete(req.params.id);
+  const deletedData = await aiService.aiResponseSessionDelete(req.params.id);
   ApiResponse.ok(res, "data is deleted", deletedData);
 };
-export { aiResponseCreate, aiResponseFind, aiResponseDelete };
+export { aiResponseCreate, aiResponseFind, aiResponseDelete,aiResponseSessionTitleUpdate };

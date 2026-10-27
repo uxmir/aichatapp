@@ -15,30 +15,30 @@ const aiResponseCreate = async (text, file) => {
     //for streaming content from ai
     const response = ai.models.generateContentStream({
       model: "gemini-3.8-flash",
-      contents:[{role:"user",parts:{text:text}}],
+      contents: [{ role: "user", parts: { text: text } }],
       config: {
         systemInstruction: "Hi I am Your Good Mern AI CHATBOT",
       },
     });
     //reply of ai in chunk data
-    let aiReply=""
+    let aiReply = "";
     for await (const chunk of response) {
-     if(chunk.text){
-      aiReply += chunk.text
-     }
+      if (chunk.text) {
+        aiReply += chunk.text;
+      }
     }
     //saving data in mongodb
+    const sessionTitle = text? text?.substring(0, 10):"chat History";
     const savedData = await aiModel.create({
-    userInput:text,
-    aiData:aiReply,
-    imageUrl:imageUrl
+      title: sessionTitle,
+      chats: [{userInput: text , aiData: aiReply, imageUrl: imageUrl}],
     });
     return savedData;
   } catch (error) {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
 };
-
+//all data fetched in session
 const aiResponseFind = async () => {
   try {
     const foundData = await aiModel.find();
@@ -47,12 +47,27 @@ const aiResponseFind = async () => {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
 };
-
-const aiResponseDelete = async (responseId) => {
+//ai sessiontitle update
+const aiResponseSessionTitleUpdate = async (dataId, data) => {
   try {
-    if(!responseId) throw ApiError.notFound("chatid is not found")
+    const updateTitle = await aiModel.findByIdAndUpdate(
+      dataId,
+      data,
+      { new: true, runValidators: true },
+    );
+    return updateTitle;
+  } catch (error) {
+    throw ApiError.serverError(`There is something wrong ${error.message}`);
+  }
+};
+//ai session delete
+const aiResponseSessionDelete = async (responseId) => {
+  try {
+    if (!responseId) throw ApiError.notFound("chatid is not found");
     const deleteData = await aiModel.findByIdAndDelete(responseId);
     return deleteData;
-  } catch (error) {}
+  } catch (error) {
+    throw ApiError.serverError(`There is something wrong ${error.message}`);
+  }
 };
-export { aiResponseCreate, aiResponseFind, aiResponseDelete };
+export { aiResponseCreate, aiResponseFind, aiResponseSessionDelete,aiResponseSessionTitleUpdate };
