@@ -28,6 +28,11 @@ const sessionSchema = new mongoose.Schema(
       type: [chatSchema],
       required: true,
     },
+    newSession: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   { timestamps: true },
 );

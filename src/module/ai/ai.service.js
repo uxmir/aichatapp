@@ -2,7 +2,7 @@ import { checkGemini } from "../../common/config/ai.js";
 import ApiError from "../../common/utils/response.error.js";
 import aiModel from "./ai.model.js";
 import uploadToImagekit from "../../common/utils/upload.imagekit.js";
-const aiResponseCreate = async (text, file) => {
+const aiResponseCreate = async (text, file, sessionId) => {
   try {
     const ai = await checkGemini();
     if (!text && !file) throw ApiError.badRequest("Please ask something");
@@ -27,22 +27,49 @@ const aiResponseCreate = async (text, file) => {
         aiReply += chunk.text;
       }
     }
-    //saving data in mongodb
-    const sessionTitle = text? text?.substring(0, 10):"chat History";
-    const savedData = await aiModel.create({
-      title: sessionTitle,
-      chats: [{userInput: text , aiData: aiReply, imageUrl: imageUrl}],
-    });
-    return savedData;
+    //saving data in mongodb with session id
+    const sessionTitle = text ? text?.substring(0, 10) : "chat History";
+    if (sessionId) {
+      const updatedSession = await aiModel.findByIdAndUpdate(
+        sessionId,
+        {
+          $push: {
+            chats: { userInput: text, aiData: aiReply, imageUrl: imageUrl },
+          },
+        },
+        { new: true },
+      );
+      if (updatedSession) return updatedSession;
+    } else {
+      const newSession = await aiModel.create({
+        newSession: true,
+        title: sessionTitle,
+        chats: [{ userInput: text, aiData: aiReply, imageUrl: imageUrl }],
+      });
+      return newSession;
+    }
   } catch (error) {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
 };
 //all data fetched in session
-const aiResponseFind = async () => {
+const aiResponseFind = async (dataId) => {
   try {
-    const foundData = await aiModel.find();
+    if (!dataId) throw ApiError.notFound("datais is not found");
+    const foundData = await aiModel.findById(dataId);
     return foundData;
+  } catch (error) {
+    throw ApiError.serverError(`There is something wrong ${error.message}`);
+  }
+};
+//ai session title find
+const aiSessionTitleFind = async () => {
+  try {
+    const foundTitle = await aiModel
+      .find()
+      .select("title")
+      .sort({ createdAt: -1 });
+    return foundTitle;
   } catch (error) {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
@@ -50,11 +77,10 @@ const aiResponseFind = async () => {
 //ai sessiontitle update
 const aiResponseSessionTitleUpdate = async (dataId, data) => {
   try {
-    const updateTitle = await aiModel.findByIdAndUpdate(
-      dataId,
-      data,
-      { new: true, runValidators: true },
-    );
+    const updateTitle = await aiModel.findByIdAndUpdate(dataId, data, {
+      new: true,
+      runValidators: true,
+    });
     return updateTitle;
   } catch (error) {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
@@ -70,4 +96,10 @@ const aiResponseSessionDelete = async (responseId) => {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
 };
-export { aiResponseCreate, aiResponseFind, aiResponseSessionDelete,aiResponseSessionTitleUpdate };
+export {
+  aiResponseCreate,
+  aiResponseFind,
+  aiResponseSessionDelete,
+  aiResponseSessionTitleUpdate,
+  aiSessionTitleFind,
+};

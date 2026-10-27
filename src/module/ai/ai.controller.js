@@ -1,17 +1,21 @@
 import * as aiService from "./ai.service.js";
 import ApiResponse from "../../common/utils/response.success.js";
 const aiResponseCreate = async (req, res) => {
-  const { text } = req.body;
+  const { text,sessionId } = req.body;
   const file = req.file;
-  const result = await aiService.aiResponseCreate(text, file);
+  const result = await aiService.aiResponseCreate(text, file,sessionId);
   ApiResponse.created(res, "data created successfully", result);
 };
 
 const aiResponseFind = async (req, res) => {
-  const fetchedData = await aiService.aiResponseFind();
+  const fetchedData = await aiService.aiResponseFind(req.params.id);
   ApiResponse.ok(res, "data fetched successfully", fetchedData);
 };
 
+const aiSessionTitleFind=async(req,res)=>{
+  const fetchedTitle=await aiService.aiSessionTitleFind()
+  ApiResponse.ok(res, "data fetched successfully", fetchedTitle);
+}
 const aiResponseSessionTitleUpdate=async(req,res)=>{
   const result=await aiService.aiResponseSessionTitleUpdate(req.params.id,req.body)
   ApiResponse.ok(res, "data fetched successfully", result);
@@ -20,4 +24,4 @@ const aiResponseDelete = async (req, res) => {
   const deletedData = await aiService.aiResponseSessionDelete(req.params.id);
   ApiResponse.ok(res, "data is deleted", deletedData);
 };
-export { aiResponseCreate, aiResponseFind, aiResponseDelete,aiResponseSessionTitleUpdate };
+export { aiResponseCreate, aiResponseFind, aiResponseDelete,aiResponseSessionTitleUpdate,aiSessionTitleFind };
