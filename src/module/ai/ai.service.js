@@ -12,17 +12,22 @@ const aiResponseCreate = async (text, file, sessionId) => {
       const responseImage = await uploadToImagekit(file.path, file.filename);
       imageUrl = responseImage.url;
     }
-    //for streaming content from ai
-    const response = ai.models.generateContentStream({
+    const responseStream = await ai.models.generateContentStream({
       model: "gemini-3.8-flash",
-      contents: [{ role: "user", parts: { text: text } }],
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: text }],
+        },
+      ],
       config: {
         systemInstruction: "Hi I am Your Good Mern AI CHATBOT",
       },
     });
-    //reply of ai in chunk data
+
+    // reply of ai in chunk data
     let aiReply = "";
-    for await (const chunk of response) {
+    for await (const chunk of responseStream) {
       if (chunk.text) {
         aiReply += chunk.text;
       }
