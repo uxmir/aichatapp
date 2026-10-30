@@ -3,14 +3,14 @@
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { createChat, findSessionChat } from "@/store/chatSlice";
 import { useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 interface ChatMessage {
   sender: "user" | "ai";
   text: string;
 }
 
-const DynamicChatPage: React.FC = () => {
+const ChatContent: React.FC = () => {
   const [inputText, setInputText] = useState<string>("");
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
 
@@ -19,6 +19,7 @@ const DynamicChatPage: React.FC = () => {
   const sessionId = params?.id as string;
 
   const chatData = useAppSelector((state) => state.chat.currentSession);
+
   useEffect(() => {
     if (sessionId) {
       dispatch(findSessionChat(sessionId));
@@ -28,7 +29,7 @@ const DynamicChatPage: React.FC = () => {
   useEffect(() => {
     if (chatData?.chats) {
       const formatted = chatData.chats.flatMap((c: any) => [
-        { sender: "user", text: c.userText },
+        { sender: "user", text: c.userInput },
         { sender: "ai", text: c.aiData },
       ]);
       setLocalMessages(formatted);
@@ -46,14 +47,20 @@ const DynamicChatPage: React.FC = () => {
       { sender: "user", text: userQuery },
       { sender: "ai", text: "" },
     ]);
-
     try {
-      const res = await dispatch(
-        createChat({ text: userQuery, sessionId }),
-      ).unwrap();
-      const reader = res.body.getReader();
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/v2/chat/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: userQuery, sessionId }),
+      });
+
+      if (!response.body) throw new Error("Response body is null");
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let currentAiReply = "";
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -123,6 +130,16 @@ const DynamicChatPage: React.FC = () => {
         </button>
       </form>
     </div>
+  );
+};
+
+const DynamicChatPage: React.FC = () => {
+  return (
+    <Suspense
+      fallback={<div className="p-5 text-center">Loading chat session...</div>}
+    >
+      <ChatContent />
+    </Suspense>
   );
 };
 

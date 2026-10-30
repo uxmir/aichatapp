@@ -17,8 +17,8 @@ const SideBar: React.FC = () => {
       <h2 className="font-bold mb-4">Chat History</h2>
       {Array.isArray(titleData) &&
         titleData?.map((t: any) => (
-          <div key={t._id} className="flex flex-col gap-y-2 mb-2">
-            <Link href={`/${t._id}`} className="hover:text-blue-500 truncate">
+          <div className="flex flex-col gap-y-2 mb-2" key={t._id}>
+            <Link key={t._id} href={`/${t._id}`} className="hover:text-blue-500 truncate">
               <span>{t.title}</span>
             </Link>
           </div>

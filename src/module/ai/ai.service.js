@@ -16,12 +16,50 @@ const aiResponseCreate = async (text, file, sessionId, res) => {
       const responseImage = await uploadToImagekit(file.path, file.filename);
       imageUrl = responseImage.url;
     }
+    //sending to ai all chats history
+    let previousChats = [];
+    if (sessionId) {
+      const existingSession = await aiModel.findById(sessionId);
+      if (existingSession && existingSession.chats) {
+        existingSession.chats.forEach((chat) => {
+          const a = chat.userInput;
+          const b = chat.imageUrl;
+          const c = chat.aiData;
+          let userChats = [];
+          if (a) {
+            userChats.push({ text: a });
+          }
+          if (b) {
+            userChats.push({ text: `[AttachedImage:${b}]` });
+          }
+          if(userChats.length>0){
+            previousChats.push({role:"user",parts:userChats})
+          }
+          if(c){
+             previousChats.push({role:"model",parts:[{text:c}]})
+          }
+        });
+      }
+    }
+    let currentChats = [];
+    if (text) {
+      currentChats.push({ text: text });
+    }
+    if (imageUrl) {
+      currentChats.push({ text: `[AttachedImage:${imageUrl}]` });
+    }
+    if(currentChats.length>0){
+      previousChats.push({role:"user",parts:currentChats})
+    }else{
+      previousChats.push({role:"user",parts:[{text:"Hello"}]})
+    }
+
     const responseStream = await ai.models.generateContentStream({
       model: "gemini-3.8-flash",
       contents: [
         {
           role: "user",
-          parts: [{ text: text }],
+          parts: previousChats,
         },
       ],
       config: {
