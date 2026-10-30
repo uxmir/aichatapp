@@ -3,8 +3,7 @@ import ApiResponse from "../../common/utils/response.success.js";
 const aiResponseCreate = async (req, res) => {
   const { text,sessionId } = req.body;
   const file = req.file;
-  const result = await aiService.aiResponseCreate(text, file,sessionId);
-  ApiResponse.created(res, "data created successfully", result);
+ await aiService.aiResponseCreate(text, file,sessionId,res);
 };
 
 const aiResponseFind = async (req, res) => {

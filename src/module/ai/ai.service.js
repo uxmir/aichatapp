@@ -2,10 +2,14 @@ import { checkGemini } from "../../common/config/ai.js";
 import ApiError from "../../common/utils/response.error.js";
 import aiModel from "./ai.model.js";
 import uploadToImagekit from "../../common/utils/upload.imagekit.js";
-const aiResponseCreate = async (text, file, sessionId) => {
+const aiResponseCreate = async (text, file, sessionId, res) => {
   try {
     const ai = await checkGemini();
     if (!text && !file) throw ApiError.badRequest("Please ask something");
+    //setting http
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
     //for saving image in imagekit
     let imageUrl = "";
     if (file) {
@@ -30,30 +34,37 @@ const aiResponseCreate = async (text, file, sessionId) => {
     for await (const chunk of responseStream) {
       if (chunk.text) {
         aiReply += chunk.text;
+        res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
       }
     }
     //saving data in mongodb with session id
     const sessionTitle = text ? text?.substring(0, 10) : "chat History";
+    let savedSession;
     if (sessionId) {
-      const updatedSession = await aiModel.findByIdAndUpdate(
+      savedSession = await aiModel.findByIdAndUpdate(
         sessionId,
         {
           $push: {
             chats: { userInput: text, aiData: aiReply, imageUrl: imageUrl },
           },
         },
-        { new: true },
+        { returnDocument: "after" },
       );
-      if (updatedSession) return updatedSession;
     } else {
-      const newSession = await aiModel.create({
+      savedSession = await aiModel.create({
         newSession: true,
         title: sessionTitle,
         chats: [{ userInput: text, aiData: aiReply, imageUrl: imageUrl }],
       });
-      return newSession;
     }
+    res.write(
+      `data: ${JSON.stringify({ done: true, session: savedSession })}\n\n`,
+    );
+    res.end();
+    return savedSession;
   } catch (error) {
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+    res.end();
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
 };
@@ -83,7 +94,7 @@ const aiSessionTitleFind = async () => {
 const aiResponseSessionTitleUpdate = async (dataId, data) => {
   try {
     const updateTitle = await aiModel.findByIdAndUpdate(dataId, data, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
     return updateTitle;

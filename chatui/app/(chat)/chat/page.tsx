@@ -21,7 +21,6 @@ const Page: React.FC = () => {
       }
     }
   };
-
   return (
     <div>
       <div className="text-4xl mb-4">Chat with Mir</div>
