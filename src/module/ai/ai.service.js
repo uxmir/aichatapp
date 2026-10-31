@@ -56,12 +56,7 @@ const aiResponseCreate = async (text, file, sessionId, res) => {
 
     const responseStream = await ai.models.generateContentStream({
       model: "gemini-3.8-flash",
-      contents: [
-        {
-          role: "user",
-          parts: previousChats,
-        },
-      ],
+      contents: previousChats,
       config: {
         systemInstruction: "Hi I am Your Good Mern AI CHATBOT",
       },
