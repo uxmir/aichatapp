@@ -166,11 +166,11 @@ const googleLogin = async (profile) => {
       user.googleId = profile?.id;
       await user.save();
     }
-    const accessToken = generateAccessToken({
+    const accessToken = await generateAccessToken({
       id: user?._id,
       role: user?.role,
     });
-    const refreshToken = generateRefreshToken({
+    const refreshToken = await generateRefreshToken({
       id: user?._id,
       role: user?.role,
     });

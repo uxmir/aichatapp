@@ -26,7 +26,7 @@ const refreshToken = async (req, res) => {
   ApiResponse.ok(res, "accessToken has been generated", { accessToken });
 };
 const logout = async (req, res) => {
-  await AuthService.logout(req.user?.id);
+  await AuthService.logout(req.user?._id);
   res.clearCookie("refreshToken");
   ApiResponse.ok(res, "user logged out");
 };
@@ -40,13 +40,19 @@ const resetPassword = async (req, res) => {
 };
 
 const googleAuth = async (req, res) => {
-  const { accessToken, refreshToken } = req.user;
-  res.cookie("refreshToken", refreshToken, {
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  });
-  res.redirect(`${process.env.CLIENT_URL}/login-success?token=${accessToken}`);
+  try {
+    const { accessToken, refreshToken } = req.user;
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax", 
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return res.redirect(`${process.env.CLIENT_URL}/login-success?token=${accessToken}`);
+  } catch (error) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+  }
 };
 export  {
   signup,

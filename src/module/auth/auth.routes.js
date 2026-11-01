@@ -11,6 +11,6 @@ router.post("/refresh-token", AuthController.refreshToken);
 router.put("/reset-password/:token", AuthController.resetPassword);
 router.get("/very-email/:token", AuthController.verifyEmail);
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get("/google/callback",passport.authenticate("google",{ session: false, failureRedirect: "/login" }),AuthController.googleAuth)
+router.get("/google/callback",passport.authenticate("google",{ session: false, failureRedirect: `${process.env.CLIENT_URL}/login` }),AuthController.googleAuth)
 
 export default router;

@@ -11,13 +11,13 @@ import AiRouter from './module/ai/ai.routes.js'
 //cors middleware
 app.use(
   cors({
-    origin: "http://localhost:3000", 
-    // credentials: true,              
+    origin:process.env.CLIENT_URL, 
+    credentials: true,              
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 app.use(express.json())
-app.use('/auth',AuthRouter)
+app.use('/api/v1/auth',AuthRouter)
 //chat with ai
 app.use('/api/v2/chat',AiRouter)
 export default app

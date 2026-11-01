@@ -1,3 +1,4 @@
+import { ChatSession } from './../types/chat.d';
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { getErrorMessage } from "@/lib/errorcatch";
@@ -10,8 +11,8 @@ const api = axios.create({
 });
 
 interface ChatState {
-  sessions: any[];       
-  currentSession: any;   
+  sessions: ChatSession[];       
+  currentSession:ChatSession | null;   
   error: string | null;
   loading: boolean;
 }
