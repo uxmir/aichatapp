@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom Dark Scrollbar Design */
+::-webkit-scrollbar {
+  width: 6px;  
+  height: 6px; 
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b; 
+  border-radius: 9999px; 
+  border: 1px solid rgba(255, 255, 255, 0.05); 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f46e5; 
+}

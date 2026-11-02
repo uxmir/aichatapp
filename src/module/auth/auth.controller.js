@@ -26,7 +26,7 @@ const refreshToken = async (req, res) => {
   ApiResponse.ok(res, "accessToken has been generated", { accessToken });
 };
 const logout = async (req, res) => {
-  await AuthService.logout(req.user?._id);
+  await AuthService.logout();
   res.clearCookie("refreshToken");
   ApiResponse.ok(res, "user logged out");
 };
