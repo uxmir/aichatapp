@@ -12,15 +12,14 @@ const SideBar: React.FC = () => {
   useEffect(() => {
     dispatch(findSessionTitle());
   }, [dispatch]);
-
   return (
     <div className="w-64 h-[100vh] fixed top-0 border-r p-4 overflow-y-auto">
       <h2 className="font-bold mb-4">Chat History</h2>
+      <Link href={'/chat'}><button >New Chat</button></Link>
       <div className="flex flex-col gap-y-2">
         {Array.isArray(titleData) &&
           titleData?.map((t: any, index: number) => {
             if (!t || !t._id) return null;
-
             return (
               <Link 
                 key={index} 

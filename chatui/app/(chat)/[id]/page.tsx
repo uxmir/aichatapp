@@ -29,8 +29,8 @@ const ChatContent: React.FC = () => {
   useEffect(() => {
     if (chatData?.chats) {
       const formatted = chatData.chats.flatMap((c: any) => [
-        { sender: "user", text: c.userInput },
-        { sender: "ai", text: c.aiData },
+        { sender: "user" as "user", text: c.userInput },
+        { sender: "ai" as "ai", text: c.aiData },
       ]);
       setLocalMessages(formatted);
     }
@@ -48,13 +48,16 @@ const ChatContent: React.FC = () => {
       { sender: "ai", text: "" },
     ]);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API}/api/v2/chat/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/v2/chat/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: userQuery, sessionId }),
         },
-        body: JSON.stringify({ text: userQuery, sessionId }),
-      });
+      );
 
       if (!response.body) throw new Error("Response body is null");
       const reader = response.body.getReader();

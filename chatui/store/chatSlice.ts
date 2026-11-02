@@ -103,17 +103,41 @@ const chatSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createChat.fulfilled, (state, action: PayloadAction<any>) => {
+     .addCase(createChat.fulfilled, (state, action: PayloadAction<any>) => {
         state.loading = false;
-        const newSession = action?.payload?.data || action?.payload;
-        state.currentSession = newSession;
-        const exists = state.sessions.some((s) => s._id === newSession._id);
-        if (!exists) {
-          state.sessions = [newSession, ...state.sessions];
+        let rawData = action?.payload;
+        let newSession = null;
+        if (typeof rawData === 'string') {
+          try {
+            const lines = rawData.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data:')) {
+                const jsonStr = line.replace('data:', '').trim();
+                if (jsonStr) {
+                  const parsed = JSON.parse(jsonStr);
+                  if (parsed.session) {
+                    newSession = parsed.session;
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Failed to parse stream payload", e);
+          }
         } else {
-          state.sessions = state.sessions.map((s) => 
-            s._id === newSession._id ? newSession : s
-          );
+          newSession = rawData?.data || rawData;
+        }
+
+        if (newSession?._id) {
+          state.currentSession = newSession;
+          const exists = state.sessions.some((s) => s._id === newSession._id);
+          if (!exists) {
+            state.sessions = [newSession, ...state.sessions];
+          } else {
+            state.sessions = state.sessions.map((s) => 
+              s._id === newSession._id ? newSession : s
+            );
+          }
         }
         state.error = null;
       })

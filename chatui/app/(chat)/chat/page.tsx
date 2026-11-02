@@ -1,23 +1,34 @@
 "use client";
 
 import { useAppDispatch } from "@/lib/hooks";
-import { createChat } from "@/store/chatSlice";
+import { createChat,findSessionTitle } from "@/store/chatSlice";
 import { useRouter } from "next/navigation"; 
 import React, { useState } from "react";
 const Page: React.FC = () => {
   const [inputText, setInputText] = useState<string>("");
   const dispatch = useAppDispatch();
   const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+    
     const resultAction = await dispatch(createChat({ text: inputText }));
     
     if (createChat.fulfilled.match(resultAction)) {
-      const newSession = resultAction.payload?.data || resultAction.payload;
-      if (newSession?._id) {
-        router.push(`/${newSession._id}`);
+      const payload = resultAction.payload;
+      let sessionId = null;
+      if (typeof payload === 'string') {
+        const match = payload.match(/"_id"\s*:\s*"([0-9a-fA-F]{24})"/);
+        if (match && match[1]) {
+          sessionId = match[1];
+        }
+      } else {
+        sessionId = payload?.session?._id || payload?.data?._id || payload?._id;
+      }
+      if (sessionId) {
+        router.push(`/${sessionId}`);
+      } else {
+        console.error("Failed to extract sessionId from chat creation payload.");
       }
     }
   };
