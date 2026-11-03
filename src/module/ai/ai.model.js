@@ -19,6 +19,11 @@ const chatSchema = new mongoose.Schema(
 
 const sessionSchema = new mongoose.Schema(
   {
+    user:{
+     type:mongoose.Types.ObjectId,
+     ref:"AiUser",
+     required:true
+    },
     title: {
       type: String,
       required: true,

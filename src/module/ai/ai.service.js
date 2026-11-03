@@ -2,10 +2,10 @@ import { checkGemini } from "../../common/config/ai.js";
 import ApiError from "../../common/utils/response.error.js";
 import aiModel from "./ai.model.js";
 import uploadToImagekit from "../../common/utils/upload.imagekit.js";
-const aiResponseCreate = async (text, file, sessionId, res) => {
+const aiResponseCreate = async (text, file, sessionId,userId, res) => {
   try {
     const ai = await checkGemini();
-    if (!text && !file) throw ApiError.badRequest("Please ask something");
+    if (!text && !file && !userId) throw ApiError.badRequest("Please ask something");
     //setting http
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
@@ -85,6 +85,7 @@ const aiResponseCreate = async (text, file, sessionId, res) => {
       );
     } else {
       savedSession = await aiModel.create({
+        user:userId,
         newSession: true,
         title: sessionTitle,
         chats: [{ userInput: text, aiData: aiReply, imageUrl: imageUrl }],
@@ -102,20 +103,20 @@ const aiResponseCreate = async (text, file, sessionId, res) => {
   }
 };
 //all data fetched in session
-const aiResponseFind = async (dataId) => {
+const aiResponseFind = async (dataId,userId) => {
   try {
-    if (!dataId) throw ApiError.notFound("datais is not found");
-    const foundData = await aiModel.findById(dataId);
+    if (!dataId || !userId) throw ApiError.notFound("datais is not found");
+    const foundData = await aiModel.findOne({_id:dataId,user:userId});
     return foundData;
   } catch (error) {
     throw ApiError.serverError(`There is something wrong ${error.message}`);
   }
 };
 //ai session title find
-const aiSessionTitleFind = async () => {
+const aiSessionTitleFind = async (userId) => {
   try {
     const foundTitle = await aiModel
-      .find()
+      .find({user:userId})
       .select("title")
       .sort({ createdAt: -1 });
     return foundTitle;

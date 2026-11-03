@@ -1,14 +1,7 @@
 import { ChatSession } from './../types/chat.d';
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../lib/api";
 import { getErrorMessage } from "@/lib/errorcatch";
-
-const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
 
 interface ChatState {
   sessions: ChatSession[];       

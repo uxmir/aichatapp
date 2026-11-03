@@ -2,17 +2,18 @@ import * as aiService from "./ai.service.js";
 import ApiResponse from "../../common/utils/response.success.js";
 const aiResponseCreate = async (req, res) => {
   const { text,sessionId } = req.body;
+  const userId =req.user._id;
   const file = req.file;
- await aiService.aiResponseCreate(text, file,sessionId,res);
+ await aiService.aiResponseCreate(text, file,sessionId,userId,res);
 };
 
 const aiResponseFind = async (req, res) => {
-  const fetchedData = await aiService.aiResponseFind(req.params.id);
+  const fetchedData = await aiService.aiResponseFind(req.params.id,req.user._id);
   ApiResponse.ok(res, "data fetched successfully", fetchedData);
 };
 
 const aiSessionTitleFind=async(req,res)=>{
-  const fetchedTitle=await aiService.aiSessionTitleFind()
+  const fetchedTitle=await aiService.aiSessionTitleFind(req.user._id)
   ApiResponse.ok(res, "data fetched successfully", fetchedTitle);
 }
 const aiResponseSessionTitleUpdate=async(req,res)=>{
