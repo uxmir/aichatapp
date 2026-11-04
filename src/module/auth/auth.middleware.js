@@ -17,10 +17,8 @@ const authenticate = async (req, res, next) => {
     if (!token) {
       throw ApiError.unauthorized("User is unauthorized");
     }
-
     const decoded =await verifyRefreshToken(token);
     const user = await User.findById(decoded?.id);
-
     if (!user) {
       throw ApiError.notFound("User id is not found");
     }

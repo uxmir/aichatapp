@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  # backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatmil_backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+
+  # (chatui)
+  frontend:
+    build:
+      context: ./chatui
+      dockerfile: Dockerfile
+    container_name: chatmil_frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./chatui/.env
+    depends_on:
+      - backend
