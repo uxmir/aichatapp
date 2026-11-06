@@ -207,12 +207,11 @@ const ChatContent: React.FC = () => {
     </div>
   );
 };
-
 const DynamicChatPage: React.FC = () => {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center h-screen bg-slate-950 text-indigo-400">
+        <div className="flex items-center  justify-center h-screen bg-slate-950 text-indigo-400">
           <div className="flex items-center space-x-2">
             <Loader2 className="w-6 h-6 animate-spin" />
             <span className="text-sm font-medium">Loading chat session...</span>
