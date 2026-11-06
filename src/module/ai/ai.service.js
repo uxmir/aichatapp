@@ -1,23 +1,27 @@
-import { checkGemini } from "../../common/config/ai.js";
+import { checkOpenAI } from "../../common/config/ai.js";
 import ApiError from "../../common/utils/response.error.js";
 import aiModel from "./ai.model.js";
 import uploadToImagekit from "../../common/utils/upload.imagekit.js";
-const aiResponseCreate = async (text, file, sessionId,userId, res) => {
+const aiResponseCreate = async (text, file, sessionId, userId, res) => {
   try {
-    const ai = await checkGemini();
+    const ai = await checkOpenAI();
     if (!text && !file && !userId) throw ApiError.badRequest("Please ask something");
-    //setting http
+
+    // setting http
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-    //for saving image in imagekit
+
+    // for saving image in imagekit
     let imageUrl = "";
     if (file) {
       const responseImage = await uploadToImagekit(file.path, file.filename);
       imageUrl = responseImage.url;
     }
-    //sending to ai all chats history
-    let previousChats = [];
+
+    // sending to ai all chats history (OpenAI Format)
+    let messages = [];
+
     if (sessionId) {
       const existingSession = await aiModel.findById(sessionId);
       if (existingSession && existingSession.chats) {
@@ -25,52 +29,54 @@ const aiResponseCreate = async (text, file, sessionId,userId, res) => {
           const a = chat.userInput;
           const b = chat.imageUrl;
           const c = chat.aiData;
-          let userChats = [];
-          if (a) {
-            userChats.push({ text: a });
+          if (a || b) {
+            let userContent = [];
+            if (a) {
+              userContent.push({ type: "text", text: a });
+            }
+            if (b) {
+              userContent.push({ type: "image_url", image_url: { url: b } });
+            }
+            messages.push({ role: "user", content: userContent });
           }
-          if (b) {
-            userChats.push({ text: `[AttachedImage:${b}]` });
-          }
-          if(userChats.length>0){
-            previousChats.push({role:"user",parts:userChats})
-          }
-          if(c){
-             previousChats.push({role:"model",parts:[{text:c}]})
+          if (c) {
+            messages.push({ role: "assistant", content: c });
           }
         });
       }
     }
-    let currentChats = [];
+    let currentContent = [];
     if (text) {
-      currentChats.push({ text: text });
+      currentContent.push({ type: "text", text: text });
     }
     if (imageUrl) {
-      currentChats.push({ text: `[AttachedImage:${imageUrl}]` });
-    }
-    if(currentChats.length>0){
-      previousChats.push({role:"user",parts:currentChats})
-    }else{
-      previousChats.push({role:"user",parts:[{text:"Hello"}]})
+      currentContent.push({ type: "image_url", image_url: { url: imageUrl } });
     }
 
-    const responseStream = await ai.models.generateContentStream({
-      model: "gemini-3.8-flash",
-      contents: previousChats,
-      config: {
-        systemInstruction: "Hi I am Your Good Mern AI CHATBOT",
-      },
+    if (currentContent.length > 0) {
+      messages.push({ role: "user", content: currentContent });
+    } else {
+      messages.push({ role: "user", content: "Hello" });
+    }
+
+    // OpenAI Stream Request
+    const responseStream = await ai.chat.completions.create({
+      model: "gpt-6-luna",
+      messages: messages,
+      stream: true,
     });
 
     // reply of ai in chunk data
     let aiReply = "";
     for await (const chunk of responseStream) {
-      if (chunk.text) {
-        aiReply += chunk.text;
-        res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        aiReply += content;
+        res.write(`data: ${JSON.stringify({ text: content })}\n\n`);
       }
     }
-    //saving data in mongodb with session id
+
+    // saving data in mongodb with session id
     const sessionTitle = text ? text?.substring(0, 10) : "chat History";
     let savedSession;
     if (sessionId) {
@@ -85,12 +91,13 @@ const aiResponseCreate = async (text, file, sessionId,userId, res) => {
       );
     } else {
       savedSession = await aiModel.create({
-        user:userId,
+        user: userId,
         newSession: true,
         title: sessionTitle,
         chats: [{ userInput: text, aiData: aiReply, imageUrl: imageUrl }],
       });
     }
+
     res.write(
       `data: ${JSON.stringify({ done: true, session: savedSession })}\n\n`,
     );

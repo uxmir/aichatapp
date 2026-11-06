@@ -1,22 +1,25 @@
-
 import dotenv from "dotenv";
 dotenv.config();
-
+const API_KEY = process.env.OPENAI_API_KEY;
 export const apikeyChecker = () => {
-  const api_key = process.env.GEMINI_API;
-  if (!api_key) {
-    console.error("Error: GEMINI_API key is missing in .env file!");
+  if (!API_KEY) {
+    console.error(
+      "Error: OPENAI_API_KEY is not set in the environment variables.",
+    );
     process.exit(1);
-  } else {
-    console.log("geminiapi is connected successfully");
-    return api_key;
   }
 };
 
-export const checkGemini = async () => {
-  const api_key = apikeyChecker(); 
-  const { GoogleGenAI } = await import("@google/genai");
-  const ai = new GoogleGenAI({ apiKey: api_key }); 
-  console.log("Gemini client is connected");
-  return ai;
+export const checkOpenAI = async () => {
+  const openai = (await import("openai")).default;
+  const client = new openai.OpenAI({
+    apiKey: API_KEY,
+  });
+
+  if (!client) {
+    console.error("Error: Failed to initialize OpenAI client.");
+    process.exit(1);
+  }
+  console.log("OpenAI client initialized successfully.");
+  return client;
 };

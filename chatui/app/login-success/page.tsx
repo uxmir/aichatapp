@@ -2,20 +2,25 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
-
+import { useAppDispatch } from "@/lib/hooks";
+import Cookies from "js-cookie";
 export default function LoginSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-
+  const dispatch=useAppDispatch()
   useEffect(() => {
     if (token) {
-      localStorage.setItem("accessToken", token);
+      Cookies.set("accessToken", token, { 
+        expires: 15 / 1440, 
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "lax" 
+      });
       router.replace("/chat");
     } else {
       router.replace("/login");
     }
-  }, [token, router]);
+  }, [token, router, dispatch]);
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-100 overflow-hidden px-4 selection:bg-indigo-500 selection:text-white">

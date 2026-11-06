@@ -1,8 +1,6 @@
 "use client";
-
 import React, { Suspense } from "react";
 import { Sparkles, ShieldCheck, Zap } from "lucide-react";
-
 const LoginPage = () => {
   const handleGoogleLogin = () => {
     const googleAuthUrl =

@@ -4,7 +4,7 @@ import { findSessionTitle } from "@/store/chatSlice";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
 import { Plus, MessageSquare, MoreVertical, Menu, X, User, Edit3, Trash2,LogOut  } from "lucide-react";
-import { logout } from "@/store/authSlice";
+import { findMe, logout } from "@/store/authSlice";
 import { useRouter } from "next/navigation";
 const SideBar: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -15,6 +15,7 @@ const SideBar: React.FC = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router=useRouter()
   useEffect(() => {
+    dispatch(findMe())
     dispatch(findSessionTitle());
   }, [dispatch]);
 
