@@ -17,17 +17,7 @@ const initialState: AuthService = {
   error: null,
   loading: false,
 };
-export const refresh = createAsyncThunk(
-  "auth/refresh",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/api/v1/auth/refresh-token"); 
-      return response?.data;
-    } catch (error: any) {
-      return rejectWithValue(getErrorMessage(error));
-    }
-  }
-);
+
 export const findMe = createAsyncThunk(
   "auth/findMe",
   async (_, { rejectWithValue }) => {
@@ -67,22 +57,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Refresh Token Cases
-      .addCase(refresh.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(refresh.fulfilled, (state, action) => {
-        state.loading = false;
-        state.accessToken = action.payload?.data?.accessToken || action.payload?.accessToken;
-      })
-      .addCase(refresh.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-        state.auth = null;
-        state.accessToken = null;
-      })
-
       // Find Me Cases (/get-me)
       .addCase(findMe.pending, (state) => {
         state.loading = true;
@@ -114,5 +88,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setAccessToken, clearAuth } = authSlice.actions;
+export const { clearAuth } = authSlice.actions;
 export default authSlice.reducer;

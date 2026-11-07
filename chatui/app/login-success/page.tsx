@@ -12,7 +12,7 @@ export default function LoginSuccessPage() {
   useEffect(() => {
     if (token) {
       Cookies.set("accessToken", token, { 
-        expires: 15 / 1440, 
+        expires: 2 / 1440, 
         secure: process.env.NODE_ENV === "production", 
         sameSite: "lax" 
       });
